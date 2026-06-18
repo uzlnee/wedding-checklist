@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { saveRoom, subscribeRoom } from "./firebase";
-import { C, STATUS, CATS, PHASES, won, uid, seedItems } from "./constants";
+import { C, STATUS, CATS, PHASES, phaseDate, won, uid, seedItems } from "./constants";
 
 const css = `
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,700&display=swap');
@@ -276,12 +276,13 @@ function TimelineView({ items, weddingDate, onEdit }) {
         const allDone= its.length>0 && doneCnt===its.length;
         let calLabel=null, calStyle={};
         if (weddingDate) {
-          const pd = new Date(weddingDate+"T00:00:00");
-          pd.setMonth(pd.getMonth()-phase.m);
-          const label=`${pd.getFullYear()}년 ${pd.getMonth()+1}월`;
-          if (allDone)       { calLabel=`✓ 완료`;                       calStyle={background:C.greenBg,color:C.green}; }
-          else if (today>pd) { calLabel=`⏳ ${label} · 지금 챙겨요`;    calStyle={background:C.amberBg,color:C.amber}; }
-          else               { calLabel=`🗓 ${label}부터`;               calStyle={background:C.greyBg, color:C.t700};  }
+          const pd = phaseDate(weddingDate, phase);
+          const label = phase.d != null
+            ? `${pd.getMonth()+1}월 ${pd.getDate()}일`
+            : `${pd.getFullYear()}년 ${pd.getMonth()+1}월`;
+          if (allDone)       { calLabel=`✓ 완료`;                    calStyle={background:C.greenBg,color:C.green}; }
+          else if (today>pd) { calLabel=`⏳ ${label} · 지금 챙겨요`;  calStyle={background:C.amberBg,color:C.amber}; }
+          else               { calLabel=`🗓 ${label}부터`;            calStyle={background:C.greyBg, color:C.t700};  }
         }
         return (
           <div key={phase.id} style={{display:"flex",gap:0,marginBottom:4}}>
