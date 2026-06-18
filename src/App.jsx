@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { saveRoom, subscribeRoom } from "./firebase";
-import { C, STATUS, CATS, PHASES, won, uid, seedItems } from "./constants";
+import { C, STATUS, CATS, PHASES, phaseDate, won, uid, seedItems } from "./constants";
 
 const css = `
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,700&display=swap');
@@ -276,12 +276,13 @@ function TimelineView({ items, weddingDate, onEdit }) {
         const allDone= its.length>0 && doneCnt===its.length;
         let calLabel=null, calStyle={};
         if (weddingDate) {
-          const pd = new Date(weddingDate+"T00:00:00");
-          pd.setMonth(pd.getMonth()-phase.m);
-          const label=`${pd.getFullYear()}년 ${pd.getMonth()+1}월`;
-          if (allDone)       { calLabel=`✓ 완료`;                       calStyle={background:C.greenBg,color:C.green}; }
-          else if (today>pd) { calLabel=`⏳ ${label} · 지금 챙겨요`;    calStyle={background:C.amberBg,color:C.amber}; }
-          else               { calLabel=`🗓 ${label}부터`;               calStyle={background:C.greyBg, color:C.t700};  }
+          const pd = phaseDate(weddingDate, phase);
+          const label = phase.d != null
+            ? `${pd.getMonth()+1}월 ${pd.getDate()}일`
+            : `${pd.getFullYear()}년 ${pd.getMonth()+1}월`;
+          if (allDone)       { calLabel=`✓ 완료`;                    calStyle={background:C.greenBg,color:C.green}; }
+          else if (today>pd) { calLabel=`⏳ ${label} · 지금 챙겨요`;  calStyle={background:C.amberBg,color:C.amber}; }
+          else               { calLabel=`🗓 ${label}부터`;            calStyle={background:C.greyBg, color:C.t700};  }
         }
         return (
           <div key={phase.id} style={{display:"flex",gap:0,marginBottom:4}}>
@@ -295,12 +296,13 @@ function TimelineView({ items, weddingDate, onEdit }) {
               {idx<PHASES.length-1 && <div style={{flex:1,width:2,background:C.line,margin:"4px 0"}}/>}
             </div>
             <div style={{...sx.card,flex:1,marginLeft:10,marginBottom:16,padding:"16px 18px"}}>
-              <div style={{fontSize:11,fontWeight:700,color:C.t400,letterSpacing:1,textTransform:"uppercase"}}>{phase.when}</div>
-              <div style={{fontSize:16,fontWeight:800,color:C.t900,marginTop:3}}>{phase.sub}</div>
-              <div style={{fontSize:13,color:C.t500,marginTop:2,fontWeight:500}}>{doneCnt}/{its.length} 완료</div>
+              <div style={{display:"flex",alignItems:"baseline",justifyContent:"space-between",gap:8}}>
+                <div style={{fontSize:16,fontWeight:800,color:C.t900}}>{phase.when}</div>
+                <div style={{fontSize:12,color:C.t500,fontWeight:600,flexShrink:0}}>{doneCnt}/{its.length}</div>
+              </div>
               {calLabel && (
-                <div style={{display:"inline-flex",alignItems:"center",fontSize:12,fontWeight:700,
-                  borderRadius:8,padding:"5px 10px",marginTop:10,...calStyle}}>{calLabel}</div>
+                <div style={{display:"inline-flex",alignItems:"center",fontSize:11.5,fontWeight:700,
+                  borderRadius:8,padding:"4px 9px",marginTop:8,...calStyle}}>{calLabel}</div>
               )}
               {its.length>0 && (
                 <div style={{marginTop:12,borderTop:`1px solid ${C.line}`}}>
@@ -313,8 +315,8 @@ function TimelineView({ items, weddingDate, onEdit }) {
                           borderTop:`1px solid ${C.line}`,cursor:"pointer"}}>
                         <span style={{fontSize:18,width:24,textAlign:"center",flexShrink:0}}>{it.emoji}</span>
                         <div style={{flex:1,textAlign:"left",minWidth:0}}>
-                          <div style={{fontSize:14.5,fontWeight:700,color:C.t900}}>{it.title}</div>
-                          <div style={{fontSize:12,color:C.t500,marginTop:2,lineHeight:1.4}}>{it.tip}</div>
+                          <div style={{fontSize:14,fontWeight:700,color:C.t900}}>{it.title}</div>
+                          <div style={{fontSize:11,color:C.t400,marginTop:1,lineHeight:1.3}}>{it.tip}</div>
                         </div>
                         <span style={{fontSize:11.5,fontWeight:700,padding:"4px 9px",
                           borderRadius:7,background:s.bg,color:s.color,flexShrink:0}}>{s.label}</span>
