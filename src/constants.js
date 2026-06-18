@@ -4,13 +4,22 @@ export const CATS = [
 ];
 
 export const PHASES = [
-  { id:"p1", m:12, when:"예식 1년 전",       sub:"큰 틀을 잡는 시기예요" },
-  { id:"p2", m:9,  when:"예식 8~10개월 전",  sub:"스드메·예물을 계약해요" },
-  { id:"p3", m:7,  when:"예식 6~8개월 전",   sub:"본식 기록·신혼여행을 준비해요" },
-  { id:"p4", m:5,  when:"예식 4~5개월 전",   sub:"한복·예복을 맞춰요" },
-  { id:"p5", m:3,  when:"예식 2~3개월 전",   sub:"청첩장·식순을 챙겨요" },
-  { id:"p6", m:1,  when:"예식 한 달 전",     sub:"마지막 디테일을 점검해요" },
+  { id:"p1", m:12, when:"상견례",              sub:"양가 첫 만남을 준비해요" },
+  { id:"p2", m:9,  when:"결혼 준비 시작",       sub:"홀·스드메·예물을 계약해요" },
+  { id:"p3", m:6,  when:"웨딩데이 6~5개월 전",  sub:"가봉·스튜디오 촬영을 진행해요" },
+  { id:"p4", m:4,  when:"웨딩데이 4~3개월 전",  sub:"청첩장·인력·피부관리를 챙겨요" },
+  { id:"p5", m:2,  when:"웨딩데이 2~1개월 전",  sub:"발송·피팅·리허설을 확인해요" },
+  { id:"p6", d:14, when:"웨딩데이 2주 전",       sub:"식순을 확정해요" },
+  { id:"p7", d:7,  when:"웨딩데이 1주 전",       sub:"하객 수·사례비를 점검해요" },
+  { id:"p8", d:1,  when:"D-1",                  sub:"한복·예복·소품을 마무리해요" },
 ];
+
+export const phaseDate = (weddingDate, phase) => {
+  const d = new Date(weddingDate + "T00:00:00");
+  if (phase.d != null) d.setDate(d.getDate() - phase.d);
+  else d.setMonth(d.getMonth() - phase.m);
+  return d;
+};
 
 export const seedItems = () => [
   { id:"venue",        cat:"예식장·플래너",  emoji:"🏛️", title:"예식장",            value:"더베르G",                  status:"done",       budget:"", memo:"", phase:"p1", tip:"날짜·홀·식대를 먼저 확정해야 나머지 일정이 맞춰져요." },
