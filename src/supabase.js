@@ -82,6 +82,20 @@ export async function saveRoom(code, { items, weddingDate }) {
   if (error) throw error;
 }
 
+// 방 완전 삭제 (멤버 모두에게서 사라짐, 복구 불가)
+export async function deleteRoom(code) {
+  const { error } = await supabase.from("rooms").delete().eq("code", code);
+  if (error) throw error;
+}
+
+// 방 나가기 (내 uid만 members에서 제거, 마지막 멤버면 RPC가 방을 삭제)
+export async function leaveRoom(code) {
+  const { error } = await supabase.rpc("leave_room", {
+    room_code: code.trim().toUpperCase(),
+  });
+  if (error) throw error;
+}
+
 // 최초 상태 1회 + 이후 UPDATE 실시간. callback({ items, weddingDate }). 해제 함수 반환.
 export function subscribeRoom(code, callback) {
   let active = true;
