@@ -40,7 +40,8 @@ export async function listMyRooms() {
 }
 
 export async function createRoom(title) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) throw authError ?? new Error("로그인이 필요합니다.");
   const code = makeCode();
   const { error } = await supabase.from("rooms").insert({
     code,
@@ -77,7 +78,8 @@ export function subscribeRoom(code, callback) {
     .select("items,wedding_date")
     .eq("code", code)
     .single()
-    .then(({ data }) => {
+    .then(({ data, error }) => {
+      if (error) { console.error(error); return; }
       if (active && data) callback({ items: data.items, weddingDate: data.wedding_date });
     });
 
