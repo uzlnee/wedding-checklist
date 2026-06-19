@@ -18,6 +18,18 @@ export function signOut() {
   return supabase.auth.signOut();
 }
 
+export function signUpWithEmail(email, password) {
+  return supabase.auth.signUp({
+    email,
+    password,
+    options: { emailRedirectTo: window.location.origin },
+  });
+}
+
+export function signInWithEmail(email, password) {
+  return supabase.auth.signInWithPassword({ email, password });
+}
+
 // 현재 세션 user를 즉시 전달하고 이후 변화도 구독. 해제 함수 반환.
 export function onAuth(callback) {
   supabase.auth.getSession().then(({ data }) => {
