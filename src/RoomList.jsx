@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { listMyRooms, createRoom, joinRoom, signOut } from "./supabase";
+import { listMyRooms, createRoom, joinRoom, deleteRoom, leaveRoom, signOut } from "./supabase";
 import { C } from "./constants";
 
 export default function RoomList({ onEnter }) {
@@ -9,6 +9,10 @@ export default function RoomList({ onEnter }) {
   const [code, setCode]   = useState("");
   const [busy, setBusy]   = useState(false);
   const [error, setError] = useState("");
+  const [menuFor, setMenuFor]             = useState(null); // 액션 메뉴가 열린 방 code
+  const [confirmDelete, setConfirmDelete] = useState(null); // 삭제 확인 단계인 방 code
+  const [actionBusy, setActionBusy]       = useState(false);
+  const [actionErr, setActionErr]         = useState("");
 
   const load = useCallback(async () => {
     try { setRooms(await listMyRooms()); }
@@ -28,6 +32,22 @@ export default function RoomList({ onEnter }) {
     setBusy(true); setError("");
     try { await joinRoom(t); onEnter(t); }
     catch { setError("존재하지 않는 방 코드예요. 다시 확인해 주세요."); setBusy(false); }
+  }
+
+  function closeMenu() { setMenuFor(null); setConfirmDelete(null); setActionErr(""); }
+
+  async function doLeave(c) {
+    setActionBusy(true); setActionErr("");
+    try { await leaveRoom(c); setRooms((rs) => (rs || []).filter((r) => r.code !== c)); closeMenu(); }
+    catch { setActionErr("처리에 실패했어요. 다시 시도해 주세요."); }
+    finally { setActionBusy(false); }
+  }
+
+  async function doDelete(c) {
+    setActionBusy(true); setActionErr("");
+    try { await deleteRoom(c); setRooms((rs) => (rs || []).filter((r) => r.code !== c)); closeMenu(); }
+    catch { setActionErr("삭제에 실패했어요. 다시 시도해 주세요."); }
+    finally { setActionBusy(false); }
   }
 
   const wrap = {
@@ -61,16 +81,63 @@ export default function RoomList({ onEnter }) {
           {rooms.map((r) => {
             const total = (r.items || []).length;
             const done = (r.items || []).filter((i) => i.status === "done").length;
+            const open = menuFor === r.code;
+            const confirming = confirmDelete === r.code;
+            const smallBtn = { flex:1, padding:"10px 0", border:"none", borderRadius:10,
+              fontSize:13.5, fontWeight:700, cursor:"pointer", fontFamily:"inherit" };
             return (
-              <button key={r.code} onClick={() => onEnter(r.code)} style={{
-                width:"100%", textAlign:"left", background:"#fff", border:`1px solid ${C.line}`,
-                borderRadius:16, padding:"16px 18px", marginBottom:10, cursor:"pointer", fontFamily:"inherit",
-              }}>
-                <div style={{ fontSize:16, fontWeight:800, color:C.t900 }}>{r.title || r.code}</div>
-                <div style={{ fontSize:12.5, color:C.t500, marginTop:4 }}>
-                  코드 {r.code} · {done}/{total} 완료{r.wedding_date ? ` · 예식 ${r.wedding_date}` : ""}
+              <div key={r.code} style={{ background:"#fff", border:`1px solid ${C.line}`,
+                borderRadius:16, padding:"16px 18px", marginBottom:10 }}>
+                <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                  <div onClick={() => onEnter(r.code)} style={{ flex:1, minWidth:0, cursor:"pointer" }}>
+                    <div style={{ fontSize:16, fontWeight:800, color:C.t900 }}>{r.title || r.code}</div>
+                    <div style={{ fontSize:12.5, color:C.t500, marginTop:4 }}>
+                      코드 {r.code} · {done}/{total} 완료{r.wedding_date ? ` · 예식 ${r.wedding_date}` : ""}
+                    </div>
+                  </div>
+                  <button aria-label="방 관리"
+                    onClick={() => { setMenuFor(open ? null : r.code); setConfirmDelete(null); setActionErr(""); }}
+                    style={{ flexShrink:0, width:34, height:34, borderRadius:9, border:"none",
+                      background:open ? C.greyBg : "#fff", color:C.t500, fontSize:18, fontWeight:800,
+                      cursor:"pointer", lineHeight:1 }}>
+                    ⋯
+                  </button>
                 </div>
-              </button>
+
+                {open && (
+                  <div style={{ marginTop:12, borderTop:`1px solid ${C.line}`, paddingTop:12 }}>
+                    {confirming ? (
+                      <>
+                        <div style={{ fontSize:12.5, color:C.t700, fontWeight:600, lineHeight:1.5, marginBottom:10 }}>
+                          완전 삭제할까요? 파트너도 못 쓰게 되고 되돌릴 수 없어요.
+                        </div>
+                        <div style={{ display:"flex", gap:8 }}>
+                          <button disabled={actionBusy} onClick={() => doDelete(r.code)}
+                            style={{ ...smallBtn, background:C.red, color:"#fff" }}>
+                            {actionBusy ? "삭제 중…" : "삭제"}
+                          </button>
+                          <button disabled={actionBusy} onClick={() => setConfirmDelete(null)}
+                            style={{ ...smallBtn, background:C.greyBg, color:C.t700 }}>
+                            취소
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <div style={{ display:"flex", gap:8 }}>
+                        <button disabled={actionBusy} onClick={() => doLeave(r.code)}
+                          style={{ ...smallBtn, background:C.greyBg, color:C.t700 }}>
+                          {actionBusy ? "처리 중…" : "나가기"}
+                        </button>
+                        <button disabled={actionBusy} onClick={() => setConfirmDelete(r.code)}
+                          style={{ ...smallBtn, background:"#fff", color:C.red, border:`1.5px solid ${C.line}` }}>
+                          삭제
+                        </button>
+                      </div>
+                    )}
+                    {actionErr && <div style={{ color:C.red, fontSize:12.5, marginTop:8, fontWeight:600 }}>{actionErr}</div>}
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>
