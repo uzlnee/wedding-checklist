@@ -50,3 +50,11 @@ test("신설 카테고리 2개가 포함된다", () => {
   expect(CATS).toContain("피부·뷰티");
   expect(CATS).toContain("신혼 살림");
 });
+
+import { makeCode } from "./constants";
+
+test("makeCode는 6자리 대문자/숫자 코드를 만든다", () => {
+  for (let i = 0; i < 100; i++) {
+    expect(makeCode()).toMatch(/^[A-Z0-9]{6}$/);
+  }
+});
