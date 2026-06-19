@@ -1,25 +1,41 @@
 import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom/client";
-import RoomGate from "./RoomGate";
+import { onAuth } from "./supabase";
+import { C } from "./constants";
+import Login from "./Login";
+import RoomList from "./RoomList";
 import App from "./App";
 
+function Splash() {
+  return (
+    <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:"100vh",
+      fontFamily:"system-ui,sans-serif", color:C.t500, fontSize:15 }}>
+      불러오는 중…
+    </div>
+  );
+}
+
 function Root() {
-  const [roomCode, setRoomCode] = useState(null);
+  const [user, setUser] = useState(null);
+  const [authReady, setAuthReady] = useState(false);
+  const [roomCode, setRoomCode] = useState(() => localStorage.getItem("weddingRoomCode"));
 
   useEffect(() => {
-    const saved = localStorage.getItem("weddingRoomCode");
-    if (saved) setRoomCode(saved);
+    const unsub = onAuth((u) => {
+      setUser(u);
+      setAuthReady(true);
+      if (!u) { localStorage.removeItem("weddingRoomCode"); setRoomCode(null); }
+    });
+    return unsub;
   }, []);
 
-  const handleEnter = (code) => setRoomCode(code);
+  const enterRoom = (code) => { localStorage.setItem("weddingRoomCode", code); setRoomCode(code); };
+  const leaveRoom = () => { localStorage.removeItem("weddingRoomCode"); setRoomCode(null); };
 
-  const handleLeave = () => {
-    localStorage.removeItem("weddingRoomCode");
-    setRoomCode(null);
-  };
-
-  if (!roomCode) return <RoomGate onEnter={handleEnter} />;
-  return <App roomCode={roomCode} onLeave={handleLeave} />;
+  if (!authReady) return <Splash />;
+  if (!user) return <Login />;
+  if (!roomCode) return <RoomList onEnter={enterRoom} />;
+  return <App roomCode={roomCode} onLeave={leaveRoom} />;
 }
 
 const root = ReactDOM.createRoot(document.getElementById("root"));

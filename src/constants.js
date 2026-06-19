@@ -89,6 +89,12 @@ export const seedItems = () => [
 
 export const won = (n) => new Intl.NumberFormat("ko-KR").format(n);
 export const uid = () => "x" + Math.random().toString(36).slice(2, 8);
+export const makeCode = () => {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let s = "";
+  for (let i = 0; i < 6; i++) s += chars[Math.floor(Math.random() * chars.length)];
+  return s;
+};
 
 export const C = {
   green:    "#16A34A",

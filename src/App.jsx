@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { saveRoom, subscribeRoom } from "./firebase";
+import { saveRoom, subscribeRoom, signOut } from "./supabase";
 import { C, STATUS, CATS, PHASES, phaseDate, won, uid, seedItems } from "./constants";
 
 const css = `
@@ -31,7 +31,7 @@ function useDebouncedSave(roomCode, items, weddingDate, ready) {
 }
 
 /* ─── root ──────────────────────────────────────────────── */
-export default function App({ roomCode }) {
+export default function App({ roomCode, onLeave }) {
   const [items, setItems]             = useState(null);
   const [weddingDate, setWeddingDate] = useState("");
   const [synced, setSynced]           = useState(false);
@@ -101,8 +101,14 @@ export default function App({ roomCode }) {
       <header style={sx.header}>
         <div style={sx.headerTitle}>Wedding Checklist</div>
         <div style={sx.headerSubRow}>
+          <button onClick={() => onLeave && onLeave()} style={sx.codeBtn}>
+            ← 목록
+          </button>
           <button onClick={() => setShowCode(v=>!v)} style={sx.codeBtn}>
             🔗 {roomCode}
+          </button>
+          <button onClick={() => signOut()} style={sx.codeBtn}>
+            로그아웃
           </button>
           <label style={sx.ddayLabel}>
             <input type="date" value={weddingDate}

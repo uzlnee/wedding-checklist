@@ -1,4 +1,5 @@
 import { phaseDate, PHASES, CATS, seedItems } from "./constants";
+import { makeCode } from "./constants";
 
 test("월 단위 단계는 개월 수만큼 뺀다", () => {
   const d = phaseDate("2026-12-25", { m: 6 });
@@ -49,4 +50,10 @@ test("시드 항목 id는 모두 유일하다", () => {
 test("신설 카테고리 2개가 포함된다", () => {
   expect(CATS).toContain("피부·뷰티");
   expect(CATS).toContain("신혼 살림");
+});
+
+test("makeCode는 6자리 대문자/숫자 코드를 만든다", () => {
+  for (let i = 0; i < 100; i++) {
+    expect(makeCode()).toMatch(/^[A-Z0-9]{6}$/);
+  }
 });

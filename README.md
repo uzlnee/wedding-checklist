@@ -1,11 +1,18 @@
 # Wedding Checklist 🌿
 
 커플이 함께 쓰는 결혼 준비 체크리스트 웹앱.  
-Firebase Firestore 실시간 동기화 + Vercel 배포.
+Supabase 실시간 동기화 + Google 로그인 + Vercel 배포.
 
 ---
 
 ## 로컬 실행
+
+프로젝트 루트에 `.env` 파일을 만들고 Supabase 프로젝트 정보를 입력하세요:
+
+```
+REACT_APP_SUPABASE_URL=https://your-project.supabase.co
+REACT_APP_SUPABASE_ANON_KEY=your-anon-key
+```
 
 ```bash
 npm install
@@ -44,10 +51,12 @@ git push -u origin main
 
 ## 사용법
 
-1. 접속하면 **"새 체크리스트 만들기"** 클릭 → 6자리 방 코드 생성
-2. 파트너에게 방 코드 공유
-3. 파트너는 **"기존 방 코드로 입장"** → 코드 입력
-4. 이제 두 사람이 같은 체크리스트를 실시간으로 공유!
+1. 접속하면 Google 계정으로 로그인
+2. **"새 방 만들기"** → 방 이름 입력 → 방 코드 생성
+3. 파트너에게 방 코드 공유
+4. 파트너는 **"코드로 입장"** → 코드 입력
+5. 이제 두 사람이 같은 체크리스트를 실시간으로 공유!
+6. 헤더 **"← 목록"** 으로 내 방 목록 복귀, **"로그아웃"** 으로 로그아웃
 
 ---
 
@@ -55,9 +64,10 @@ git push -u origin main
 
 ```
 src/
-  firebase.js     # Firebase 설정 및 Firestore 함수
+  supabase.js     # Supabase 설정 및 인증/데이터 함수
   constants.js    # 색상, 데이터, 상수
-  RoomGate.jsx    # 방 만들기 / 입장 화면
+  Login.jsx       # Google 로그인 화면
+  RoomList.jsx    # 내 방 목록 / 방 만들기 / 코드 입장 화면
   App.jsx         # 메인 앱 (체크리스트, 일정, 예산 탭)
   index.js        # 진입점
 ```
