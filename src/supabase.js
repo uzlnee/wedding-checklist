@@ -82,6 +82,15 @@ export async function saveRoom(code, { items, weddingDate }) {
   if (error) throw error;
 }
 
+// 방 이름 변경 (멤버면 가능 — 기존 update 정책으로 충분)
+export async function renameRoom(code, title) {
+  const { error } = await supabase
+    .from("rooms")
+    .update({ title: title || "" })
+    .eq("code", code);
+  if (error) throw error;
+}
+
 // 방 완전 삭제 (멤버 모두에게서 사라짐, 복구 불가)
 export async function deleteRoom(code) {
   const { error } = await supabase.from("rooms").delete().eq("code", code);

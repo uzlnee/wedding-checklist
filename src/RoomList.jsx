@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { listMyRooms, createRoom, joinRoom, deleteRoom, leaveRoom, signOut } from "./supabase";
+import { listMyRooms, createRoom, joinRoom, renameRoom, deleteRoom, leaveRoom, signOut } from "./supabase";
 import { C } from "./constants";
 
 export default function RoomList({ onEnter }) {
@@ -11,6 +11,8 @@ export default function RoomList({ onEnter }) {
   const [error, setError] = useState("");
   const [menuFor, setMenuFor]             = useState(null); // 액션 메뉴가 열린 방 code
   const [confirmDelete, setConfirmDelete] = useState(null); // 삭제 확인 단계인 방 code
+  const [renaming, setRenaming]           = useState(null); // 이름 변경 중인 방 code
+  const [renameTitle, setRenameTitle]     = useState("");
   const [actionBusy, setActionBusy]       = useState(false);
   const [actionErr, setActionErr]         = useState("");
 
@@ -34,7 +36,18 @@ export default function RoomList({ onEnter }) {
     catch { setError("존재하지 않는 방 코드예요. 다시 확인해 주세요."); setBusy(false); }
   }
 
-  function closeMenu() { setMenuFor(null); setConfirmDelete(null); setActionErr(""); }
+  function closeMenu() { setMenuFor(null); setConfirmDelete(null); setRenaming(null); setActionErr(""); }
+
+  async function doRename(c) {
+    const t = renameTitle.trim();
+    setActionBusy(true); setActionErr("");
+    try {
+      await renameRoom(c, t);
+      setRooms((rs) => (rs || []).map((r) => (r.code === c ? { ...r, title: t } : r)));
+      closeMenu();
+    } catch { setActionErr("이름 변경에 실패했어요. 다시 시도해 주세요."); }
+    finally { setActionBusy(false); }
+  }
 
   async function doLeave(c) {
     setActionBusy(true); setActionErr("");
@@ -96,7 +109,7 @@ export default function RoomList({ onEnter }) {
                     </div>
                   </div>
                   <button aria-label="방 관리"
-                    onClick={() => { setMenuFor(open ? null : r.code); setConfirmDelete(null); setActionErr(""); }}
+                    onClick={() => { setMenuFor(open ? null : r.code); setConfirmDelete(null); setRenaming(null); setActionErr(""); }}
                     style={{ flexShrink:0, width:34, height:34, borderRadius:9, border:"none",
                       background:open ? C.greyBg : "#fff", color:C.t500, fontSize:18, fontWeight:800,
                       cursor:"pointer", lineHeight:1 }}>
@@ -106,7 +119,26 @@ export default function RoomList({ onEnter }) {
 
                 {open && (
                   <div style={{ marginTop:12, borderTop:`1px solid ${C.line}`, paddingTop:12 }}>
-                    {confirming ? (
+                    {renaming === r.code ? (
+                      <>
+                        <input autoFocus value={renameTitle} maxLength={30}
+                          onChange={(e) => { setRenameTitle(e.target.value); setActionErr(""); }}
+                          placeholder="방 이름"
+                          style={{ width:"100%", boxSizing:"border-box", border:`1.5px solid ${C.line}`,
+                            borderRadius:10, padding:"11px 13px", fontSize:15, color:C.t900,
+                            outline:"none", fontFamily:"inherit", background:"#fff", marginBottom:10 }} />
+                        <div style={{ display:"flex", gap:8 }}>
+                          <button disabled={actionBusy || !renameTitle.trim()} onClick={() => doRename(r.code)}
+                            style={{ ...smallBtn, background:C.green, color:"#fff", opacity:(actionBusy||!renameTitle.trim())?.5:1 }}>
+                            {actionBusy ? "저장 중…" : "저장"}
+                          </button>
+                          <button disabled={actionBusy} onClick={() => { setRenaming(null); setActionErr(""); }}
+                            style={{ ...smallBtn, background:C.greyBg, color:C.t700 }}>
+                            취소
+                          </button>
+                        </div>
+                      </>
+                    ) : confirming ? (
                       <>
                         <div style={{ fontSize:12.5, color:C.t700, fontWeight:600, lineHeight:1.5, marginBottom:10 }}>
                           완전 삭제할까요? 파트너도 못 쓰게 되고 되돌릴 수 없어요.
@@ -124,6 +156,10 @@ export default function RoomList({ onEnter }) {
                       </>
                     ) : (
                       <div style={{ display:"flex", gap:8 }}>
+                        <button disabled={actionBusy} onClick={() => { setRenaming(r.code); setRenameTitle(r.title || ""); setActionErr(""); }}
+                          style={{ ...smallBtn, background:C.greyBg, color:C.t700 }}>
+                          이름 변경
+                        </button>
                         <button disabled={actionBusy} onClick={() => doLeave(r.code)}
                           style={{ ...smallBtn, background:C.greyBg, color:C.t700 }}>
                           {actionBusy ? "처리 중…" : "나가기"}
