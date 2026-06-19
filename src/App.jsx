@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { saveRoom, subscribeRoom, signOut } from "./supabase";
-import { C, STATUS, CATS, PHASES, phaseDate, won, uid, seedItems } from "./constants";
+import { C, STATUS, CATS, PHASES, phaseDate, splitDate, composeDate, won, uid, seedItems } from "./constants";
 
 const css = `
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,700&display=swap');
@@ -39,6 +39,9 @@ export default function App({ roomCode, onLeave }) {
   const [filter, setFilter]           = useState("all");
   const [editing, setEditing]         = useState(null);
   const [showCode, setShowCode]       = useState(false);
+  const [showDate, setShowDate]       = useState(false);
+  const [dy, setDy] = useState(""); const [dm, setDm] = useState(""); const [dd, setDd] = useState("");
+  const [dateErr, setDateErr]         = useState("");
   const skipNextSync = useRef(false);
 
   /* ── realtime subscribe ── */
@@ -78,6 +81,17 @@ export default function App({ roomCode, onLeave }) {
   const addItem    = (next) => mutate(p => [...p, next]);
   const removeItem = (id)   => mutate(p => p.filter(i => i.id!==id));
 
+  const openDate = () => {
+    const s = splitDate(weddingDate);
+    setDy(s.y); setDm(s.m); setDd(s.d); setDateErr(""); setShowCode(false); setShowDate(v=>!v);
+  };
+  const saveDate = () => {
+    const composed = composeDate(dy, dm, dd);
+    if (!composed) { setDateErr("올바른 날짜를 입력해 주세요."); return; }
+    skipNextSync.current = true; setWeddingDate(composed); setShowDate(false);
+  };
+  const clearDate = () => { skipNextSync.current = true; setWeddingDate(""); setShowDate(false); };
+
   if (!synced || !items) return (
     <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",
       fontFamily:'system-ui,sans-serif', color:C.t500, fontSize:15}}>
@@ -110,16 +124,13 @@ export default function App({ roomCode, onLeave }) {
           <button onClick={() => signOut()} style={sx.codeBtn}>
             로그아웃
           </button>
-          <label style={sx.ddayLabel}>
-            <input type="date" value={weddingDate}
-              onChange={e => { skipNextSync.current=true; setWeddingDate(e.target.value); }}
-              style={{position:"absolute",inset:0,opacity:0,width:"100%",height:"100%",cursor:"pointer",border:"none",zIndex:1}}
-              aria-label="예식일 선택" />
+          <button onClick={openDate} style={{...sx.ddayLabel, background:"none", border:"none", padding:0, font:"inherit"}}
+            aria-label="예식일 설정">
             {weddingDate
               ? <><span style={sx.ddayD}>D</span>
                   <span style={sx.ddayNum}>{dday>0?`-${dday}`:dday===0?"-DAY":`+${-dday}`}</span></>
               : <span style={sx.ddayEmpty}>예식일 설정 ›</span>}
-          </label>
+          </button>
         </div>
 
         {showCode && (
@@ -130,6 +141,39 @@ export default function App({ roomCode, onLeave }) {
               style={{fontSize:13,fontWeight:700,color:C.green,background:"none",border:"none",cursor:"pointer",padding:0}}>
               복사하기 →
             </button>
+          </div>
+        )}
+
+        {showDate && (
+          <div style={sx.codeBanner}>
+            <div style={{fontSize:13,color:C.t700,fontWeight:600,marginBottom:10}}>예식일을 입력하세요</div>
+            <div style={{display:"flex",gap:6,justifyContent:"center",alignItems:"center"}}>
+              <input inputMode="numeric" value={dy} placeholder="2026"
+                onChange={e=>{setDy(e.target.value.replace(/[^0-9]/g,"").slice(0,4));setDateErr("");}}
+                style={sx.dateInput(58)} aria-label="연도" />
+              <span style={{fontSize:13,color:C.t500,fontWeight:600}}>년</span>
+              <input inputMode="numeric" value={dm} placeholder="10"
+                onChange={e=>{setDm(e.target.value.replace(/[^0-9]/g,"").slice(0,2));setDateErr("");}}
+                style={sx.dateInput(40)} aria-label="월" />
+              <span style={{fontSize:13,color:C.t500,fontWeight:600}}>월</span>
+              <input inputMode="numeric" value={dd} placeholder="15"
+                onChange={e=>{setDd(e.target.value.replace(/[^0-9]/g,"").slice(0,2));setDateErr("");}}
+                style={sx.dateInput(40)} aria-label="일" />
+              <span style={{fontSize:13,color:C.t500,fontWeight:600}}>일</span>
+            </div>
+            {dateErr && <div style={{color:C.red,fontSize:12.5,marginTop:8,fontWeight:600}}>{dateErr}</div>}
+            <div style={{display:"flex",gap:8,marginTop:12,justifyContent:"center"}}>
+              <button onClick={saveDate}
+                style={{fontSize:13.5,fontWeight:700,color:"#fff",background:C.green,border:"none",borderRadius:10,padding:"9px 20px",cursor:"pointer"}}>
+                확인
+              </button>
+              {weddingDate && (
+                <button onClick={clearDate}
+                  style={{fontSize:13.5,fontWeight:700,color:C.t500,background:C.greyBg,border:"none",borderRadius:10,padding:"9px 16px",cursor:"pointer"}}>
+                  지우기
+                </button>
+              )}
+            </div>
           </div>
         )}
       </header>
@@ -589,4 +633,7 @@ const sx = {
   input: { width:"100%", boxSizing:"border-box", border:`1px solid ${C.line}`,
     borderRadius:12, padding:"13px 14px", fontSize:15, color:C.t900,
     background:"#fff", fontWeight:500, outline:"none", fontFamily:"inherit" },
+  dateInput: (w) => ({ width:w, boxSizing:"border-box", border:`1.5px solid ${C.line}`,
+    borderRadius:10, padding:"10px 8px", fontSize:16, fontWeight:700, textAlign:"center",
+    color:C.t900, background:"#fff", outline:"none", fontFamily:"inherit" }),
 };

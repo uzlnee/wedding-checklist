@@ -1,5 +1,4 @@
-import { phaseDate, PHASES, CATS, seedItems } from "./constants";
-import { makeCode } from "./constants";
+import { phaseDate, PHASES, CATS, seedItems, makeCode, splitDate, composeDate } from "./constants";
 
 test("월 단위 단계는 개월 수만큼 뺀다", () => {
   const d = phaseDate("2026-12-25", { m: 6 });
@@ -56,4 +55,24 @@ test("makeCode는 6자리 대문자/숫자 코드를 만든다", () => {
   for (let i = 0; i < 100; i++) {
     expect(makeCode()).toMatch(/^[A-Z0-9]{6}$/);
   }
+});
+
+test("splitDate는 YYYY-MM-DD를 년/월/일로 분리하고 앞자리 0을 뗀다", () => {
+  expect(splitDate("2026-10-05")).toEqual({ y: "2026", m: "10", d: "5" });
+});
+
+test("splitDate는 형식이 아니면 빈 값", () => {
+  expect(splitDate("")).toEqual({ y: "", m: "", d: "" });
+  expect(splitDate("2026/10/05")).toEqual({ y: "", m: "", d: "" });
+});
+
+test("composeDate는 유효한 날짜를 YYYY-MM-DD로 만든다", () => {
+  expect(composeDate("2026", "10", "5")).toBe("2026-10-05");
+  expect(composeDate(2026, 1, 1)).toBe("2026-01-01");
+});
+
+test("composeDate는 잘못된/존재하지 않는 날짜에 null", () => {
+  expect(composeDate("2026", "13", "1")).toBeNull(); // 13월
+  expect(composeDate("2026", "2", "30")).toBeNull(); // 2월 30일 없음
+  expect(composeDate("", "10", "5")).toBeNull();     // 연도 비어 있음
 });

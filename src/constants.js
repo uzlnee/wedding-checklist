@@ -96,6 +96,21 @@ export const makeCode = () => {
   return s;
 };
 
+// "YYYY-MM-DD" → { y, m, d } (문자열, 월·일은 앞자리 0 제거). 형식이 아니면 빈 값.
+export const splitDate = (s) => {
+  const mt = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || "");
+  return mt ? { y: mt[1], m: String(+mt[2]), d: String(+mt[3]) } : { y: "", m: "", d: "" };
+};
+
+// y, m, d → "YYYY-MM-DD" 또는 null(유효하지 않은 날짜). 실제 존재하는 날짜만 통과.
+export const composeDate = (y, m, d) => {
+  const Y = parseInt(y, 10), M = parseInt(m, 10), D = parseInt(d, 10);
+  if (!Y || !M || !D || Y < 1900 || Y > 2100 || M < 1 || M > 12 || D < 1 || D > 31) return null;
+  const dt = new Date(Y, M - 1, D);
+  if (dt.getFullYear() !== Y || dt.getMonth() !== M - 1 || dt.getDate() !== D) return null;
+  return `${Y}-${String(M).padStart(2, "0")}-${String(D).padStart(2, "0")}`;
+};
+
 export const C = {
   green:    "#16A34A",
   greenBg:  "#E7F6EC",
