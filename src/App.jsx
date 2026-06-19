@@ -148,15 +148,15 @@ export default function App({ roomCode, onLeave }) {
           <div style={sx.codeBanner}>
             <div style={{fontSize:13,color:C.t700,fontWeight:600,marginBottom:10}}>예식일을 입력하세요</div>
             <div style={{display:"flex",gap:6,justifyContent:"center",alignItems:"center"}}>
-              <input inputMode="numeric" value={dy} placeholder="2026"
+              <input inputMode="numeric" value={dy}
                 onChange={e=>{setDy(e.target.value.replace(/[^0-9]/g,"").slice(0,4));setDateErr("");}}
                 style={sx.dateInput(58)} aria-label="연도" />
               <span style={{fontSize:13,color:C.t500,fontWeight:600}}>년</span>
-              <input inputMode="numeric" value={dm} placeholder="10"
+              <input inputMode="numeric" value={dm}
                 onChange={e=>{setDm(e.target.value.replace(/[^0-9]/g,"").slice(0,2));setDateErr("");}}
                 style={sx.dateInput(40)} aria-label="월" />
               <span style={{fontSize:13,color:C.t500,fontWeight:600}}>월</span>
-              <input inputMode="numeric" value={dd} placeholder="15"
+              <input inputMode="numeric" value={dd}
                 onChange={e=>{setDd(e.target.value.replace(/[^0-9]/g,"").slice(0,2));setDateErr("");}}
                 style={sx.dateInput(40)} aria-label="일" />
               <span style={{fontSize:13,color:C.t500,fontWeight:600}}>일</span>
